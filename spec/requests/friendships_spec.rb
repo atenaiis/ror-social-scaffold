@@ -10,17 +10,32 @@ describe 'testing friendship features', type: :feature do
                                 email: 'regi@gmail',
                                 password: '123456',
                                 password_confirmation: '123456' })
-    @test_friend_request = User.create!({ name: 'Jonny',
-                                          email: 'jonny@gmail',
-                                          password: '123456',
-                                          password_confirmation: '123456' })
-    @friendship = Friendship.create!({ user_id: @test_friend_request.id,
-                                       friend_id: @test_user.id,
-                                       accepted: nil })
-
-    @post = Post.create!({ user_id: @test_friend_request.id,
-                           content: 'Test post from John' })
   end
 
-  ## Creating
-  
+  describe 'Creating Requests login with Mariana' do
+    before :each do
+      visit 'users/sign_in'
+      fill_in 'Email', with: 'regi@gmail'
+      fill_in 'Password', with: '123456'
+      click_button 'commit'
+      visit 'users'
+    end
+    it 'login was made' do
+      expect(page).to have_content 'REGINA'
+    end
+    it 'users is listed in users index' do
+      expect(page).to have_content 'Mariana'
+    end
+
+    it 'User model can get the list of friendships' do
+      expect(@test_friend.accepted_friendships.class.to_s).to eql('Friendship::ActiveRecord_AssociationRelation')
+    end
+    it 'User model can get an array of his pending_friends' do
+      expect(@test_friend.pending_request.class.to_s).to eql('Friendship::ActiveRecord_AssociationRelation')
+    end
+
+    it 'User returns a booelan if user is an invitee or not' do
+      expect(@test_friend.invitee?(@test_user)).to eql(false)
+    end
+  end
+end
