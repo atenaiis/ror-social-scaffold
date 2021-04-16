@@ -1,4 +1,5 @@
 module ApplicationHelper
+  
   def menu_link_to(link_text, link_path)
     class_name = current_page?(link_path) ? 'menu-item active' : 'menu-item'
 
@@ -19,7 +20,7 @@ module ApplicationHelper
   def display_users(users)
     list_item = content_tag(:li, class: '') do
     end
-    users.each do |user|
+    all_users.each do |user|
       list_item +=
         content_tag(:h3) do
           user.name

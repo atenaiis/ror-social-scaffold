@@ -26,6 +26,11 @@ class User < ApplicationRecord
     received_requests.where(confirmed: nil)
   end
 
+  def friends_and_own_posts
+    Post.where(user: (self.friends.to_a << self))
+    # This will produce SQL query with IN. Something like: select * from posts where user_id IN (1,45,874,43);
+  end
+  
   # To Confirm a Friend from (User) When I want to confirm someone's friendship
   def confirm_friend(user)
     friendships_unique = pending_accept.where(user_id: user.id).first
