@@ -1,4 +1,5 @@
 module ApplicationHelper
+  
   def menu_link_to(link_text, link_path)
     class_name = current_page?(link_path) ? 'menu-item active' : 'menu-item'
 
@@ -13,6 +14,49 @@ module ApplicationHelper
       link_to('Dislike!', post_like_path(id: like.id, post_id: post.id), method: :delete)
     else
       link_to('Like!', post_likes_path(post_id: post.id), method: :post)
+    end
+  end
+
+  def display_users(users)
+    list_item = content_tag(:li, class: '') do
+    end
+    all_users.each do |user|
+      list_item +=
+        content_tag(:h3) do
+          user.name
+        end +
+        content_tag(:div, class: 'd-flex') do
+          content_tag(:span, class: 'profile-link mr-2 ') do
+            button_to 'See Profile', user_path(user), method: 'get', class: ' '
+          end +
+            friendship_buttons(user)
+        end
+    end
+    list_item
+  end
+
+  def friendship_buttons(user)
+    if current_user.invitee?(user) && !user.friend?(current_user)
+      content_tag(:div, class: 'd-flex') do
+        content_tag(:span, class: 'profile-link ') do
+          button_to 'Accept', "/friendships/#{user.id}", method: 'put', class: ''
+        end +
+          content_tag(:span, class: 'profile-link') do
+            button_to 'Decline', "/friendships/#{user.id}", method: 'delete', class: ''
+          end
+      end
+    elsif current_user.requested_friend?(user) && !user.friend?(current_user)
+      content_tag(:span, class: 'disable profile-link') do
+        button_to 'Pending', class: 'disable profile-link'
+      end
+    elsif !user.friend?(current_user)
+      content_tag(:span, class: 'profile-link') do
+        button_to 'Add Friend', "/adding/#{user.id}", method: 'get', class: ''
+      end
+    else
+      content_tag(:span, class: 'profile-link') do
+        button_to "Remove #{user.id}", "/friendships/#{user.id}", method: 'delete', class: ''
+      end
     end
   end
 end
