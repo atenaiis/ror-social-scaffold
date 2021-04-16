@@ -9,6 +9,10 @@ class User < ApplicationRecord
   has_many :posts
   has_many :comments, dependent: :destroy
   has_many :likes, dependent: :destroy
+  has_many :confirmed_friendships, -> { where confirmed: true }, class_name: "Friendship"
+  has_many :friends, through: :confirmed_friendships
+  has_many :pending_friendships, -> { where confirmed: false }, class_name: "Friendship", foreign_key: "user_id"
+  has_many :pending_friends, through: :pending_friendships, source: :friend
   has_many :sent_requests, class_name: 'Friendship', foreign_key: 'user_id', dependent: :destroy
   has_many :received_requests, class_name: 'Friendship', foreign_key: 'friend_id', dependent: :destroy
 
@@ -30,7 +34,7 @@ class User < ApplicationRecord
     Post.where(user: (self.friends.to_a << self))
     # This will produce SQL query with IN. Something like: select * from posts where user_id IN (1,45,874,43);
   end
-  
+
   # To Confirm a Friend from (User) When I want to confirm someone's friendship
   def confirm_friend(user)
     friendships_unique = pending_accept.where(user_id: user.id).first

@@ -37,5 +37,20 @@ describe 'testing friendship features', type: :feature do
     it 'User returns a booelan if user is an invitee or not' do
       expect(@test_friend.invitee?(@test_user)).to eql(false)
     end
+
+    it 'Friendship belongs to user' do
+      association = Friendship.reflect_on_association(:user)
+      expect(association.macro).to eq(:belongs_to)
+    end
+
+    it 'Friendship belongs to friend' do
+      association = Friendship.reflect_on_association(:friend)
+      expect(association.macro).to eq(:belongs_to)
+    end
+
+    it 'Friendship has a foreign_key from friend table' do
+      association = Friendship.reflect_on_association(:friend)
+      expect(association.foreign_key).to eq('friend_id')
+    end
   end
 end
