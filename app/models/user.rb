@@ -9,4 +9,57 @@ class User < ApplicationRecord
   has_many :posts
   has_many :comments, dependent: :destroy
   has_many :likes, dependent: :destroy
+  has_many :confirmed_friendships, -> { where confirmed: true }, class_name: "Friendship"
+  has_many :friends, through: :confirmed_friendships
+  has_many :pending_friendships, -> { where confirmed: false }, class_name: "Friendship", foreign_key: "user_id"
+  has_many :pending_friends, through: :pending_friendships, source: :friend
+  has_many :sent_requests, class_name: 'Friendship', foreign_key: 'user_id', dependent: :destroy
+  has_many :received_requests, class_name: 'Friendship', foreign_key: 'friend_id', dependent: :destroy
+
+  def accepted_friendships
+    sent_requests.where(confirmed: true)
+  end
+
+  # Users who has SENT a friend request and is waiting for confirmation
+  def pending_request
+    sent_requests.where(confirmed: nil)
+  end
+
+  # Users who RECEIVED a friend request and needs to confirm the request.
+  def pending_accept
+    received_requests.where(confirmed: nil)
+  end
+
+  def friends_and_own_posts
+    Post.where(user: (self.friends.to_a << self))
+    # This will produce SQL query with IN. Something like: select * from posts where user_id IN (1,45,874,43);
+  end
+
+  # To Confirm a Friend from (User) When I want to confirm someone's friendship
+  def confirm_friend(user)
+    friendships_unique = pending_accept.where(user_id: user.id).first
+    friendships_unique.confirmed = true
+    row = Friendship.new(user_id: friendships_unique.friend_id, friend_id: friendships_unique.user_id, confirmed: true)
+    row.save
+    friendships_unique.save
+  end
+
+  def delete_friend(user)
+    friend = sent_requests.find { |friendship| friendship.friend == user }
+    friend&.destroy
+    friend = received_requests.find { |friendship| friendship.user == user }
+    friend&.destroy
+  end
+
+  def invitee?(user)
+    received_requests.where(user_id: user, confirmed: nil).any?
+  end
+
+  def requested_friend?(user)
+    sent_requests.where(friend_id: user, confirmed: nil).any?
+  end
+
+  def friend?(params_user)
+    received_requests.where(user_id: params_user, confirmed: true).any?
+  end
 end
